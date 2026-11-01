@@ -1,0 +1,11 @@
+Import cryptokit
+Sub Main()
+    Dim key As Bytes = SecureTokenBytes(32)
+    Dim aad As Bytes = Bytes.FromString("example/context", Text.Encodings.UTF8)
+    Dim sealed As Bytes = SealEnvelope(key, Bytes.FromString("hello", Text.Encodings.UTF8), aad)
+    Dim opened As Optional Of Bytes = OpenEnvelope(key, sealed, aad)
+    If Not opened.HasValue Then Throw New Exception("Authentication failed")
+    Print opened.Value.ToString(Text.Encodings.UTF8)
+    Print SecureTokenBase64Url(24)
+    Print SecureRandomInteger(-10, 10)
+End Sub

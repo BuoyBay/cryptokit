@@ -1,0 +1,137 @@
+Import crypto
+
+Const Budget As Integer = 1048576
+Const MaxInt As Integer = 9223372036854775807
+
+''' Operational failure after caller arguments have been validated.
+Public Class CryptoBackendException Inherits Exception
+    Public Sub Constructor(message As String)
+        Super.Constructor(message)
+    End Sub
+End Class
+
+''' Secure entropy acquisition failed; never substitutes a fallback source.
+Public Class CryptoEntropyException Inherits CryptoBackendException
+    Public Sub Constructor(message As String)
+        Super.Constructor(message)
+    End Sub
+End Class
+
+Private Function DrawBytes(count As Integer) As Bytes
+    Dim data As Bytes
+    Try
+        data = Crypto.RandomBytes(count)
+    Catch e As Exception
+        Throw New CryptoEntropyException("Secure entropy acquisition failed: " + e.Message)
+    End Try
+    If data Is Nil Then Throw New CryptoEntropyException("Crypto returned no entropy")
+    If data.Count <> count Then Throw New CryptoEntropyException("Crypto returned incorrect entropy length")
+    Return data
+End Function
+
+''' Fresh secure bytes; 0 through 1048576 bytes. Entropy failures propagate.
+Public Function SecureTokenBytes(count As Integer) As Bytes
+    If count < 0 Or count > Budget Then Throw New InvalidArgumentException("Token byte count outside budget")
+    Return DrawBytes(count)
+End Function
+
+Public Function SecureTokenHex(count As Integer) As String
+    Return SecureTokenBytes(count).ToHex()
+End Function
+
+''' Unpadded RFC 4648 base64url; count is input bytes, not output characters.
+Public Function SecureTokenBase64Url(count As Integer) As String
+    Dim encoded As String = SecureTokenBytes(count).ToBase64()
+    Return String.Replace(String.Replace(String.Replace(encoded, "+", "-", True), "/", "_", True), "=", "", True)
+End Function
+
+''' Uniform in [lower, upperExclusive); width must fit positive signed Integer.
+Public Function SecureRandomInteger(lower As Integer, upperExclusive As Integer) As Integer
+    If lower >= upperExclusive Then Throw New InvalidArgumentException("Empty random range")
+    If lower < 0 And upperExclusive >= 0 Then
+        If upperExclusive > MaxInt + lower Then Throw New InvalidArgumentException("Random range width exceeds Integer")
+    End If
+    Dim width As Integer = upperExclusive - lower
+    Dim limit As Integer = MaxInt - (MaxInt Mod width)
+    While True
+        Dim data As Bytes = DrawBytes(8)
+        Dim candidate As Integer = data.Item(0) Mod 128
+        For i As Integer = 1 To 7
+            candidate = candidate * 256 + data.Item(i)
+        Next
+        If candidate < limit Then Return lower + (candidate Mod width)
+    End While
+End Function
+
+Private Function CopyPart(data As Bytes, offset As Integer, count As Integer) As Bytes
+    Dim output As New Bytes(count)
+    For i As Integer = 0 To count - 1
+        output.Append(data.Item(offset + i))
+    Next
+    Return output
+End Function
+
+Private Sub RequireKey(key As Bytes)
+    If key Is Nil Then Throw New InvalidArgumentException("AES-256 key required")
+    If key.Count <> 32 Then Throw New InvalidArgumentException("AES-256 key must contain 32 bytes")
+End Sub
+
+Private Function Header() As Bytes
+    Dim output As New Bytes(8)
+    output.Append(66)
+    output.Append(67)
+    output.Append(75)
+    output.Append(69)
+    output.Append(1)
+    output.Append(1)
+    output.Append(0)
+    output.Append(0)
+    Return output
+End Function
+
+Private Function AuthData(headerBytes As Bytes, aad As Bytes) As Bytes
+    Dim output As New Bytes(8 + aad.Count)
+    output.Append(headerBytes)
+    output.Append(aad)
+    Return output
+End Function
+
+''' BCKE v1 AES-256-GCM envelope; owns fresh random 12-byte nonce.
+Public Function SealEnvelope(key As Bytes, plaintext As Bytes, aad As Bytes) As Bytes
+    RequireKey(key)
+    If plaintext Is Nil Or aad Is Nil Then Throw New InvalidArgumentException("Plaintext and AAD are required")
+    If plaintext.Count > Budget Or aad.Count > Budget Then Throw New InvalidArgumentException("Envelope budget exceeded")
+    Dim headerBytes As Bytes = Header()
+    Dim nonce As Bytes = DrawBytes(12)
+    Dim cipher As New AesGcm(key)
+    Dim ciphertext As Bytes
+    Try
+        ciphertext = cipher.Encrypt(nonce, plaintext, AuthData(headerBytes, aad))
+    Catch e As Exception
+        Throw New CryptoBackendException("Envelope encryption failed: " + e.Message)
+    End Try
+    Dim output As New Bytes(36 + plaintext.Count)
+    output.Append(headerBytes)
+    output.Append(nonce)
+    output.Append(ciphertext)
+    Return output
+End Function
+
+''' None for malformed, oversized or unauthentic envelopes; never returns unauthenticated plaintext.
+Public Function OpenEnvelope(key As Bytes, envelope As Bytes, aad As Bytes) As Optional Of Bytes
+    RequireKey(key)
+    If envelope Is Nil Or aad Is Nil Then Return None
+    If envelope.Count < 36 Or envelope.Count > Budget + 36 Or aad.Count > Budget Then Return None
+    Dim expected As Bytes = Header()
+    For i As Integer = 0 To 7
+        If envelope.Item(i) <> expected.Item(i) Then Return None
+    Next
+    Dim nonce As Bytes = CopyPart(envelope, 8, 12)
+    Dim ciphertext As Bytes = CopyPart(envelope, 20, envelope.Count - 20)
+    Dim cipher As New AesGcm(key)
+    Try
+        Return cipher.Decrypt(nonce, ciphertext, AuthData(expected, aad))
+    Catch e As Exception
+        Throw New CryptoBackendException("Envelope decryption failed: " + e.Message)
+    End Try
+End Function
