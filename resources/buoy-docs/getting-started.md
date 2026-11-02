@@ -5,12 +5,11 @@ category: "Reference"
 order: 10
 ---
 
-Place crypto-1.0.0.buipkg and cryptokit-0.1.0.buipkg in packages/. Import cryptokit. The standalone example is examples/cryptokit/main.bui. Keys must contain exactly 32 bytes; pass identical AAD to sealing and opening. Inspect HasValue before reading an opened Optional.
-
+Place `crypto-1.0.0.buipkg` and `cryptokit-0.1.0.buipkg` in `packages/`. `Import cryptokit`. The standalone example is `examples/cryptokit/main.bui`. Keys must contain exactly 32 bytes; pass identical AAD to sealing and opening. Inspect `HasValue` before reading an opened `Optional`.
 
 Save the following as `main.bui` in your consumer project. Package archives and any dependencies must be installed as described above.
 
-```buoy
+```basic
 Import cryptokit
 Sub Main()
     Dim key As Bytes = SecureTokenBytes(32)

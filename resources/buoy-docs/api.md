@@ -44,9 +44,3 @@ Nonce generation uses Crypto.RandomBytes, as UUIDKit does for UUIDv4 entropy. Ra
 Integer sampling draws eight random bytes, masks the first to seven bits and accumulates without overflow. It accepts candidate < L where L = MAX_INT - (MAX_INT Mod width), then returns lower + candidate Mod width. Thus every residue has exactly L/width accepted preimages. L <= MAX_INT deliberately rejects a few extra candidates (including MAX_INT for width 1). Each retry uses fresh entropy; no retry cap or fallback introduces bias. The full signed interval and widths >=2^63 are deliberately unsupported. Negative-only and crossing-zero ranges with representable widths are supported, including a singleton at MIN_INT.
 
 Incremental hashing is deferred: the installed Crypto API exposes whole-buffer hashing, not an incremental state. Buffering entire input would not provide streaming semantics.
-
-## Verification
-
-
-Maintainers run the private validation suite before release. See the repository README for public build instructions.
-

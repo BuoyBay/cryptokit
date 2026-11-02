@@ -1,8 +1,8 @@
 # CryptoKit standalone consumer
 
-Copy main.bui into an otherwise empty directory with packages/ containing crypto-1.0.0.buipkg and cryptokit-0.1.0.buipkg. From that directory:
+Copy `main.bui` into an otherwise empty directory with `packages/` containing `crypto-1.0.0.buipkg` and `cryptokit-0.1.0.buipkg`. From that directory:
 
-```
+```sh
 buoy main.bui --check --diagnostic-format json
 buoy main.bui -o app
 ./app

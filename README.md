@@ -1,6 +1,6 @@
 # Secure tokens and authenticated AES-GCM envelopes
 
-Focused wrappers over Buoy's maintained OpenSSL-backed `crypto` package. No new cryptographic primitive implementation. Version 0.1.0 requires Buoy 0.72.0 and `crypto-1.0.0.buipkg` alongside the sealed CryptoKit archive in the consumer's `packages/` directory. `Import cryptokit` exposes the functions below. The dependency must be supplied separately; bpm.json follows this repository's UUIDKit convention rather than claiming an automatically resolved dependency.
+Focused wrappers over the maintained OpenSSL-backed `crypto` package. No new cryptographic primitive implementation. Version 0.1.0 requires Buoy 0.72.0 and `crypto-1.0.0.buipkg` alongside the sealed CryptoKit archive in the consumer's `packages/` directory. `Import cryptokit` exposes the functions below. The dependency must be supplied separately; bpm.json follows this repository's UUIDKit convention rather than claiming an automatically resolved dependency.
 
 Keys are raw caller-managed cryptographic keys. No password or passphrase shortcut is offered. Generate keys from `SecureTokenBytes(32)` or use an appropriate external key management/derivation system. Byte buffers are mutable references; functions retain no inputs after return. Do not mutate inputs concurrently. No secret zeroization guarantee is made.
 
@@ -17,7 +17,7 @@ consumer project for reproducible installs.
 
 ## Example
 
-```buoy
+```basic
 Import cryptokit
 Sub Main()
     Dim key As Bytes = SecureTokenBytes(32)
@@ -51,7 +51,6 @@ On your own machine, install Buoy and run:
 buoy ai init --both
 ```
 
-The generated agent files and editor settings stay local and are ignored by Git.
 
 ## Contributing
 

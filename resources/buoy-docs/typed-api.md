@@ -49,8 +49,6 @@ Secure entropy acquisition failed; never substitutes a fallback source.
 
 Returns: no value.
 
-## CryptoKit functions
-
 ### SecureTokenBytes
 
 `Public Function SecureTokenBytes(count As Integer) As Bytes`
