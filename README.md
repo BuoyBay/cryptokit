@@ -1,4 +1,4 @@
-# Secure tokens and authenticated AES-GCM envelopes
+# Secure tokens and AES-256-GCM envelopes
 
 Focused wrappers over the maintained OpenSSL-backed `crypto` package. No new cryptographic primitive implementation. Version 0.1.0 requires Buoy 0.72.0 and `crypto-1.0.0.buipkg` alongside the sealed CryptoKit archive in the consumer's `packages/` directory. `Import cryptokit` exposes the functions below. The dependency must be supplied separately; bpm.json follows this repository's UUIDKit convention rather than claiming an automatically resolved dependency.
 

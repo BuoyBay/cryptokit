@@ -1,1 +1,1 @@
-{"schema":1,"name":"cryptokit","version":"0.1.0","description":"Bounded secure tokens, unbiased integers and nonce-owning AES-256-GCM envelopes over the crypto package"}
+{"schema":1,"name":"cryptokit","version":"0.1.0","description":"Secure tokens and AES-256-GCM envelopes"}
