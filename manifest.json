@@ -1,1 +1,1 @@
-{"schema":1,"name":"cryptokit","version":"0.1.0","description":"Secure tokens and AES-256-GCM envelopes"}
+{"schema":1,"name":"cryptokit","version":"0.1.0","description":"Tokens and AES-GCM envelopes"}
